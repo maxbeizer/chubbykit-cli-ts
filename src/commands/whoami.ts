@@ -1,8 +1,16 @@
 import {Command, flags} from '@oclif/command'
 import cli from 'cli-ux'
 import * as fs from 'fs'
-// import * as got from 'got'
-import * as LeanKitClient from 'leankit-client'
+const LeanKitClient = require('leankit-client')
+
+interface ILeaknitResponse {
+  data: any
+}
+
+interface IAuthObj {
+  account: string
+  email: string
+}
 
 export default class Whoami extends Command {
   static description = 'confirm your identity'
@@ -12,6 +20,10 @@ export default class Whoami extends Command {
   }
 
   static configFile = `${process.env.HOME || process.env.USERPROFILE}/.config/chubbykit-cli`
+
+  private static displayLoggedInSucces({email, account}: IAuthObj) {
+    cli.log(`Logged in as: ${email} on account ${account}`)
+  }
 
   async run() {
     this.parse(Whoami)
@@ -32,14 +44,10 @@ export default class Whoami extends Command {
         password,
       }
       const client = LeanKitClient(auth)
-      client.auth.token.create('chubbykit-cli').then(response => {
+      client.auth.token.create('chubbykit-cli').then((response: ILeaknitResponse) => {
         fs.writeFileSync(Whoami.configFile, `${account}:${email}:${response.data.token}`)
         Whoami.displayLoggedInSucces({account, email})
       })
     }
-  }
-
-  static displayLoggedInSucces({email, account}) {
-    cli.log(`Logged in as: ${email} on account ${account}`)
   }
 }
